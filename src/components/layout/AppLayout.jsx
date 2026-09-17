@@ -51,9 +51,11 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      <footer className="shrink-0 border-t border-line py-3 text-center text-xs text-ink-muted">
-        {FOOTER_TEXT}
-      </footer>
+      {FOOTER_TEXT && (
+        <footer className="shrink-0 border-t border-line py-3 text-center text-xs text-ink-muted">
+          {FOOTER_TEXT}
+        </footer>
+      )}
     </div>
   )
 }

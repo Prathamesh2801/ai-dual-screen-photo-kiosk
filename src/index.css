@@ -117,36 +117,9 @@
 }
 
 /* Ambient wash — the current cover, blurred, lighting the wall behind itself. */
-@keyframes tv-ambient-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.4;
-  }
-}
-
 /* Matches the slide duration so the wash reaches full strength exactly as the
    outgoing cover's wash unmounts — otherwise the wall dips mid-change. */
-.tv-ambient {
-  animation: tv-ambient-in 900ms ease-out both;
-}
-
 /* Time remaining on the current cover. */
-@keyframes tv-progress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-.tv-progress {
-  transform-origin: left center;
-  animation: tv-progress linear both;
-}
-
 @keyframes tv-fade-in {
   from {
     opacity: 0;
@@ -239,41 +212,9 @@
   pointer-events: none;
 }
 
-/*
-  The finish hold (CoverFinale). Drains left-to-right over exactly
-  INSTANT_FINISH_HOLD_MS — the duration is set inline from config, so this
-  keyframe carries only the motion — letting the guest see the session ending
-  rather than being surprised by the reset.
-*/
-@keyframes finale-timer {
-  from {
-    transform: scaleX(1);
-  }
-  to {
-    transform: scaleX(0);
-  }
-}
-
-.finale-timer {
-  transform-origin: left center;
-  animation-name: finale-timer;
-  animation-timing-function: linear;
-  animation-fill-mode: both;
-}
-
-/* No travel for viewers who ask for less motion — the cover simply fades up. */
 @media (prefers-reduced-motion: reduce) {
-  .tv-slide-in {
-    animation: tv-fade-in 300ms ease both;
-  }
-
+  .tv-slide-in,
   .tv-slide-out,
-  .tv-progress {
-    animation: none;
-    opacity: 0;
-  }
-
-  /* The reveal keeps its staging, but loses the travel and the overshoot. */
   .reveal-head,
   .reveal-cover,
   .reveal-actions,
@@ -281,13 +222,7 @@
     animation: tv-fade-in 300ms ease both;
   }
 
-  /* The shutter flash stays — it is feedback, not decoration — but softens. */
   .camera-flash {
     animation: camera-flash 200ms linear both;
   }
-
-  /*
-    The finish timer is information, not decoration: it says how long the kiosk
-    will hold before resetting, so it keeps running at its real duration.
-  */
 }

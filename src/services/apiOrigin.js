@@ -1,8 +1,8 @@
-import { IMAGE_API_URL } from "../config";
+import { SSE_URL } from "../config";
 
 
 
-export const API_ORIGIN = new URL(IMAGE_API_URL).origin;
+export const API_ORIGIN = new URL(SSE_URL).origin;
 
 
 export function toReachableUrl(raw) {

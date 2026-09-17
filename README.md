@@ -1,87 +1,73 @@
-# Kiosk Cover Studio — template
+# AI Dual-Screen Photo Kiosk
 
-A reusable photo-kiosk composer. A guest takes a photo with a webcam, it is
-composed onto layered artwork, and the finished image downloads as a
-full-resolution PNG.
-
-Built for an **offline vertical portrait touch TV** (1080 × 1920) driven by a
-laptop with a USB webcam — but the networked/tablet modes are one config flag
-away.
+A two-device event kiosk. A guest enters their details on a **tablet**, picks a
+template, and takes a photo. A server generates the final image, and a **portrait
+TV** listening on SSE displays it and offers a QR code to download.
 
 React 19 · Vite 8 · Tailwind CSS v4 · react-router-dom v7
+
+## Status
+
+Early scaffold. The reusable core (camera, layout, UI kit, theme) is in place;
+the screens are placeholders. See [CLAUDE.md](CLAUDE.md) for the open questions
+on the server contract.
+
+## The flow
+
+```
+TABLET                              SERVER                 TV (portrait)
+ 1. Form: name, email, company
+ 2. Pick template (3–4 presets)
+ 3. Camera → photo
+ 4. Submit ──────────────────────►  generate
+                                       │
+                                    SSE │
+                                       └──────────────────► 5. Show result
+                                                            6. Hold N seconds
+                                                            7. QR to download
+                                                            8. Back to idle
+```
+
+Everything before submit is kept in **localStorage**, so a tablet reload
+mid-flow doesn't lose the guest's work.
+
+## Routes
+
+| Route | Device | Purpose |
+| --- | --- | --- |
+| `/#/` | Tablet | Details form |
+| `/#/template` | Tablet | Template picker |
+| `/#/capture` | Tablet | Camera |
+| `/#/sent` | Tablet | Confirmation |
+| `/#/tv` | TV | SSE display |
 
 ## Quick start
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev
 ```
 
-> The camera needs a **secure context**. Use `localhost` or https — over
+Open `/#/` on the tablet and `/#/tv` on the TV.
+
+> **The camera needs a secure context** — `localhost` or https. Over
 > `http://192.168.x.x` the browser will not prompt for camera access at all.
-
-## The flow
-
-1. **Attract** — an idle screen. The camera is off until someone taps *Start*.
-2. **Capture** — live webcam preview framed to the cover's own ratio, with a
-   countdown and shutter.
-3. **Compose** — drag and resize the subject (and the headline, if enabled) over
-   the artwork.
-4. **Finish** — the PNG downloads, the cover is held up full screen, then the
-   kiosk resets for the next guest.
 
 ## Configuration
 
-Everything an operator changes lives in [`src/config.js`](src/config.js).
-
-### Feature flags
-
-| Flag | Default | `false` behaviour |
-| --- | --- | --- |
-| `BG_REMOVAL_ENABLED` | `false` | Photo passes through untouched |
-| `TEXT_ENABLED` | `false` | No headline anywhere in the flow |
-| `UPLOAD_ENABLED` | `false` | Nothing sent to a server — pure offline |
-| `TV_ENABLED` | `false` | `/tv` display wall not routed |
-| `CAMERA_ENABLED` | `true` | Webcam option hidden |
-| `FILE_UPLOAD_ENABLED` | `false` | File picker hidden |
-| `INSTANT_FINISH` | `true` | Uses the separate `/result` page instead |
-
-Defaults are the **offline kiosk** setup: camera only, no network, finish in
-place.
-
-### Other settings
+Everything lives in [`src/config.js`](src/config.js).
 
 ```js
-CAMERA_WIDTH / CAMERA_HEIGHT     // requested resolution (ideal, not exact)
-CAMERA_COUNTDOWN_S               // 0 disables the countdown
-CAMERA_MIRROR_PREVIEW            // leave false — see below
-INSTANT_FINISH_HOLD_MS           // how long the finished cover is held
-BRAND_TITLE / ATTRACT_HEADING …  // all on-screen copy
+BASE_URL              // the generation server
+SUBMIT_URL / SSE_URL  // TODO: confirm with the backend
+USE_MOCK_SERVER       // true = no server needed; build and demo offline
+CAMERA_*              // resolution, facing, countdown, capture ratio
+RESULT_HOLD_MS        // how long the TV holds a finished result
+GENERATION_TIMEOUT_MS // how long the TV waits before giving up
 ```
 
-## Starting a new event
-
-1. Clone and rename.
-2. Set `BASE_URL`, the flags, and the branding strings in `config.js`.
-3. Replace `src/assets/bg.jpeg` and `src/assets/overlay.png`.
-4. **Set `COVER_WIDTH`/`COVER_HEIGHT` in `src/utils/constants.js` to match the
-   new overlay's aspect ratio:**
-   `COVER_HEIGHT = round(COVER_WIDTH * overlayHeight / overlayWidth)`.
-   This one matters — see below.
-5. Swap fonts in `src/utils/coverFont.js`, defaults in `constants.js`, colours
-   in the `@theme` block of `index.css`, and the `<title>` in `index.html`.
-
-## Things that break silently
-
-- **Cover dimensions vs. overlay art.** If they disagree, the on-screen preview
-  crops the overlay while the export stretches it — so what you position against
-  is not what you get.
-- **Mirroring the preview.** The saved photo is never mirrored (it would reverse
-  text in the scene), so a mirrored preview disagrees with the result.
-- **Camera release.** The stream must be *unmounted*, not hidden, or the webcam
-  stays locked and its LED stays on.
-
-Full notes in [CLAUDE.md](CLAUDE.md).
+`USE_MOCK_SERVER` is on by default so the flow can be developed before the
+backend is ready.
 
 ## Scripts
 
@@ -91,3 +77,8 @@ npm run build    # production build → dist/, zipped to dist.zip
 npm run lint     # eslint
 npm run preview  # serve the built bundle
 ```
+
+---
+
+Derived from `magazine-kiosk-template`. Generic improvements should be ported
+back to that repo.

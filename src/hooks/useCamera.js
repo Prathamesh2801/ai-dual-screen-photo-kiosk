@@ -3,8 +3,8 @@ import {
   CAMERA_FACING,
   CAMERA_HEIGHT,
   CAMERA_WIDTH,
+  CAPTURE_RATIO,
 } from '../config'
-import { COVER_RATIO } from '../utils/constants'
 
 
 
@@ -140,10 +140,10 @@ export function useCamera() {
 
 
     let width = sourceW
-    let height = Math.round(sourceW / COVER_RATIO)
+    let height = Math.round(sourceW / CAPTURE_RATIO)
     if (height > sourceH) {
       height = sourceH
-      width = Math.round(sourceH * COVER_RATIO)
+      width = Math.round(sourceH * CAPTURE_RATIO)
     }
     const sx = Math.round((sourceW - width) / 2)
     const sy = Math.round((sourceH - height) / 2)

@@ -1,22 +1,23 @@
 import { createHashRouter } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
-import UploadPage from './pages/UploadPage'
-import EditorPage from './pages/EditorPage'
-import ResultPage from './pages/ResultPage'
+import FormPage from './pages/FormPage'
+import TemplatePage from './pages/TemplatePage'
+import CapturePage from './pages/CapturePage'
+import SentPage from './pages/SentPage'
 import TvPage from './pages/TvPage'
 import { ROUTES } from './utils/constants'
-import { TV_ENABLED } from './config'
 
 export const router = createHashRouter([
   {
     path: '/',
     element: <AppLayout />,
     children: [
-      { index: true, element: <UploadPage /> },
-      { path: ROUTES.editor.slice(1), element: <EditorPage /> },
-      { path: ROUTES.result.slice(1), element: <ResultPage /> },
+      { index: true, element: <FormPage /> },
+      { path: ROUTES.template.slice(1), element: <TemplatePage /> },
+      { path: ROUTES.capture.slice(1), element: <CapturePage /> },
+      { path: ROUTES.sent.slice(1), element: <SentPage /> },
     ],
   },
-
-  ...(TV_ENABLED ? [{ path: ROUTES.tv, element: <TvPage /> }] : []),
+  // The TV runs on its own screen, without the tablet's chrome.
+  { path: ROUTES.tv, element: <TvPage /> },
 ])

@@ -1,43 +1,36 @@
-// ─── Host ────────────────────────────────────────────────────────────────────
-export const BASE_URL = "http://127.0.0.1";
+// ─── Server ──────────────────────────────────────────────────────────────────
+export const BASE_URL = "http://192.168.1.3";
 
-// ─── Feature flags ───────────────────────────────────────────────────────────
-// Every flag has two supported branches. Both must keep working.
-export const BG_REMOVAL_ENABLED = false;
-export const TEXT_ENABLED = false;
-export const UPLOAD_ENABLED = false;
-export const TV_ENABLED = false;
-export const CAMERA_ENABLED = true;
-export const FILE_UPLOAD_ENABLED = false;
-export const INSTANT_FINISH = true;
+// TODO: confirm exact paths and payloads with the backend.
+export const SUBMIT_URL = `${BASE_URL}/api/submit`;
+export const SSE_URL = `${BASE_URL}/api/stream`;
+export const SUBMIT_TIMEOUT_MS = 120000;
 
-// ─── Camera ──────────────────────────────────────────────────────────────────
+// ─── Mode ────────────────────────────────────────────────────────────────────
+// While true no server is called: submissions resolve locally and the TV is fed
+// by a fake stream, so the whole flow can be built and demoed before the backend
+// exists. Turn off once the real endpoints are live.
+export const USE_MOCK_SERVER = true;
+
+// ─── Camera (tablet) ─────────────────────────────────────────────────────────
 export const CAMERA_WIDTH = 1920;
 export const CAMERA_HEIGHT = 1080;
-export const CAMERA_FACING = "environment";
+// Front camera — the guest is photographing themselves.
+export const CAMERA_FACING = "user";
 export const CAMERA_COUNTDOWN_S = 3;
 // Mirroring the preview makes it disagree with the saved photo. Leave false.
 export const CAMERA_MIRROR_PREVIEW = false;
+// Capture frame shape. TODO: match to whatever the templates expect.
+export const CAPTURE_RATIO = 3 / 4;
 
-// ─── Session ─────────────────────────────────────────────────────────────────
-export const INSTANT_FINISH_HOLD_MS = 5000;
+// ─── TV display ──────────────────────────────────────────────────────────────
+// How long a finished result holds the screen before the TV returns to idle.
+export const RESULT_HOLD_MS = 20000;
+// Longest the TV waits for a result before showing a timeout state.
+export const GENERATION_TIMEOUT_MS = 90000;
+export const TV_TRANSITION_MS = 900;
 
 // ─── Branding ────────────────────────────────────────────────────────────────
-export const BRAND_TITLE = "Maxter Today";
-export const BRAND_SUBTITLE = "Cover Studio";
-export const ATTRACT_HEADING = "Be on the cover";
-export const ATTRACT_BODY =
-  "Step in front of the camera and we'll put you on the front page.";
-export const FOOTER_TEXT = "Design your cover · Beige Editorial Studio";
-
-// ─── Endpoints ───────────────────────────────────────────────────────────────
-export const BG_REMOVER_URL = `${BASE_URL}:8004/remove-bg`;
-export const IMAGE_API_URL = `${BASE_URL}/Ministack/Birthday/API/api.php`;
-export const SSE_URL = `${BASE_URL}/Ministack/Birthday/API/sse.php`;
-export const UPLOAD_TIMEOUT_MS = 120000;
-
-// ─── Display wall ────────────────────────────────────────────────────────────
-export const TV_REEL_LIMIT = 20;
-export const TV_SLIDE_MS = 7000;
-// Must match .tv-slide-in / .tv-slide-out durations in index.css.
-export const TV_TRANSITION_MS = 900;
+export const BRAND_TITLE = "Photo Kiosk";
+export const BRAND_SUBTITLE = "AI Portrait Studio";
+export const FOOTER_TEXT = "";

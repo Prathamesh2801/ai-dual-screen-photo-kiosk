@@ -3,8 +3,11 @@ import { FiCamera, FiRefreshCw, FiX, FiAlertTriangle } from 'react-icons/fi'
 import Button from './ui/Button'
 import Spinner from './ui/Spinner'
 import { useCamera } from '../hooks/useCamera'
-import { COVER_RATIO } from '../utils/constants'
-import { CAMERA_COUNTDOWN_S, CAMERA_MIRROR_PREVIEW } from '../config'
+import {
+  CAMERA_COUNTDOWN_S,
+  CAMERA_MIRROR_PREVIEW,
+  CAPTURE_RATIO,
+} from '../config'
 
 
 export default function CameraCapture({ onCapture, onCancel }) {
@@ -92,7 +95,7 @@ export default function CameraCapture({ onCapture, onCancel }) {
     <div className="space-y-4">
       <div
         className="relative mx-auto w-full overflow-hidden rounded-2xl bg-ink shadow-lift"
-        style={{ aspectRatio: COVER_RATIO }}
+        style={{ aspectRatio: CAPTURE_RATIO }}
       >
         <video
           ref={videoRef}
