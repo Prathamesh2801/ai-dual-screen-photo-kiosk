@@ -1,6 +1,17 @@
 # CLAUDE.md
 
-Guidance for Claude Code working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+```bash
+npm run dev      # Vite dev server, exposed on the LAN
+npm run build    # production build → dist/, then postbuild zips it to dist.zip
+npm run lint     # eslint .
+npm run preview  # serve the built bundle
+```
+
+There is no test runner configured. Tablet is `/#/`, TV is `/#/tv`.
 
 ## What this is
 
@@ -73,7 +84,7 @@ would otherwise break silently. Do not add explanatory prose — architectural
 ```
 src/
   config.js                 server URLs, mock switch, camera, TV timings, branding
-  router.jsx                tablet routes under AppLayout; /tv standalone
+  routes/index.jsx          tablet routes under AppLayout; /tv standalone
   index.css                 @theme tokens + keyframes
   pages/
     FormPage                name / email / company          ← placeholder
