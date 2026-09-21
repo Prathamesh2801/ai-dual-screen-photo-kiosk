@@ -1,11 +1,11 @@
 import { createHashRouter } from 'react-router-dom'
-import AppLayout from './components/layout/AppLayout'
-import FormPage from './pages/FormPage'
-import TemplatePage from './pages/TemplatePage'
-import CapturePage from './pages/CapturePage'
-import SentPage from './pages/SentPage'
-import TvPage from './pages/TvPage'
-import { ROUTES } from './utils/constants'
+import AppLayout from '../components/layout/AppLayout'
+import FormPage from '../pages/FormPage'
+import TemplatePage from '../pages/TemplatePage'
+import CapturePage from '../pages/CapturePage'
+import SentPage from '../pages/SentPage'
+import TvPage from '../pages/TvPage'
+import { ROUTES } from '../utils/constants'
 
 export const router = createHashRouter([
   {
