@@ -9,7 +9,7 @@ async function dataUrlToBlob(dataUrl) {
 
 // Resolves once the cutout has actually loaded, so the editor never opens on a
 // broken image and a CORS problem surfaces here as a retryable error.
-export async function processPhoto({ photo, signal }) {
+export async function processPhoto({ photo, size, signal }) {
   if (MOCK.process) {
     await new Promise((r) => setTimeout(r, MOCK_PROCESS_DELAY_MS))
     return { id: null, cutout: photo }
@@ -17,6 +17,7 @@ export async function processPhoto({ photo, signal }) {
 
   const body = new FormData()
   body.append('source', await dataUrlToBlob(photo), 'photo.jpg')
+  body.append('size', size)
   const data = await postForm(PROCESS_URL, body, { timeout: PROCESS_TIMEOUT_MS, signal })
   // A PHP warning printed before the JSON arrives here as a plain string.
   if (typeof data !== 'object' || data === null) {

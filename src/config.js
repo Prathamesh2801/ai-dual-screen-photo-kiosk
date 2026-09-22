@@ -13,8 +13,8 @@ export const SSE_URL = `${BASE_URL}/api/stream`;
 // Typical generation time, in seconds. Shown to the guest as the estimate and
 // used to pace the progress bar. TIMEOUT is when the tablet gives up and offers
 // a retry; keep it well past the upper end.
-export const PROCESS_TYPICAL_S = [15, 25];
-export const PROCESS_TIMEOUT_MS = 90000;
+export const PROCESS_TYPICAL_S = [25, 45];
+export const PROCESS_TIMEOUT_MS = 900000;
 export const SUBMIT_TIMEOUT_MS = 60000;
 
 // ─── Mock ────────────────────────────────────────────────────────────────────
@@ -31,11 +31,12 @@ export const MOCK_DOWNLOAD_URL = "https://www.capgemini.com";
 
 // ─── Templates ───────────────────────────────────────────────────────────────
 // `window` is the photo slot, in the frame's own pixels. The cutout is clipped
-// to it.
+// to it. `size` is sent to gpt.php: the closest ratio it offers to the window
+// (1024x1024 · 1024x1536 · 1536x1024).
 export const TEMPLATES = [
-  { id: 1, name: "Vegas Nights", src: frame1, width: 1200, height: 1920, window: { x: 257, y: 316, w: 686, h: 1041 } },
-  { id: 2, name: "The Strip", src: frame2, width: 1200, height: 1920, window: { x: 260, y: 321, w: 680, h: 1031 } },
-  { id: 3, name: "Skyline Group", src: frame3, width: 1920, height: 1200, window: { x: 345, y: 240, w: 1231, h: 603 } },
+  { id: 1, name: "Vegas Nights", src: frame1, width: 1200, height: 1920, window: { x: 257, y: 316, w: 686, h: 1041 }, size: "1024x1536" },
+  { id: 2, name: "The Strip", src: frame2, width: 1200, height: 1920, window: { x: 260, y: 321, w: 680, h: 1031 }, size: "1024x1536" },
+  { id: 3, name: "Skyline Group", src: frame3, width: 1920, height: 1200, window: { x: 450, y: 195, w: 1020, h: 680 }, size: "1536x1024" },
 ];
 
 // ─── Photo (tablet) ──────────────────────────────────────────────────────────

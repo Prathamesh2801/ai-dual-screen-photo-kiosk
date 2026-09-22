@@ -57,7 +57,7 @@ export default function CapturePage() {
     setError(null)
     setProcessing(true)
     try {
-      const { id, cutout } = await processPhoto({ photo, signal: request.signal })
+      const { id, cutout } = await processPhoto({ photo, size: template.size, signal: request.signal })
       if (request.signal.aborted) return
       saveSession({ cutout, processId: id, placement: null })
       navigate(ROUTES.editor)

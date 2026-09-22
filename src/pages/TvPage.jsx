@@ -31,8 +31,14 @@ export default function TvPage() {
       <img
         src={idle}
         alt=""
-        className={`absolute inset-0 h-full w-full object-cover transition duration-1000
-          ${result ? 'scale-110 opacity-40 blur-2xl' : ''}`}
+        className={`absolute inset-0 h-full w-full scale-110 object-cover blur-2xl transition duration-1000
+          ${result ? 'opacity-40' : 'opacity-60'}`}
+      />
+      <img
+        src={idle}
+        alt=""
+        className={`absolute inset-0 h-full w-full object-contain transition duration-1000
+          ${result ? 'opacity-0' : ''}`}
       />
 
       {result && (

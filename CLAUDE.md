@@ -62,7 +62,7 @@ is Capgemini at ACAMS 2026, Las Vegas. Source art (the `.ai` files, full-size
 frames) is in `raw-docs/`. The app uses optimised copies in `src/assets/`.
 
 **Process API — live and confirmed.** `POST {BASE_URL}/gpt.php`, multipart with
-one file field, `source`, and no template id. It takes 15–25 s (`PROCESS_TYPICAL_S`) and returns
+one file field, `source`, plus `size` from the template (2:3 portrait for frames 1–2, 3:2 for the group frame). It takes 15–25 s (`PROCESS_TYPICAL_S`) and returns
 `{ success, id, generated_image_url, final_image_url, error? }`. The app uses
 `final_image_url`, the RGBA cutout with its background removed.
 `generated_image_url` still has its background and is unused. `id` is kept as
