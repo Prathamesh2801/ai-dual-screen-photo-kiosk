@@ -1,69 +1,48 @@
 @import 'tailwindcss';
 
-/*
-  Magazine Layout — beige / professional theme
-  A calm, editorial palette: warm paper (beige) base with a muted
-  terracotta/clay accent that complements the orange magazine artwork,
-  plus a deep espresso ink for text.
-*/
+/* Palette sampled from the TV idle art: deep indigo, Strip blue, a magenta glow. */
 @theme {
-  /* Paper / surfaces */
-  --color-paper: #f7f2e9;
-  --color-paper-100: #f2ebdd;
-  --color-paper-200: #e8dfcb;
-  --color-paper-300: #ddd0b6;
+  --color-navy-deep: #0b1130;
+  --color-navy: #151d45;
+  --color-indigo: #26336e;
+  --color-brand: #1d5fae;
+  --color-azure: #2f86cf;
+  --color-aqua: #3fc6e0;
+  --color-glow: #7a2f63;
 
-  /* Ink / text */
-  --color-ink: #2b2620;
-  --color-ink-soft: #5c5347;
-  --color-ink-muted: #8a7f6e;
+  --color-ink: #0b1530;
+  --color-ink-soft: #4a5572;
 
-  /* Accent — clay / terracotta (complements the orange cover art) */
-  --color-clay: #c05f3c;
-  --color-clay-hover: #a94e2f;
-  --color-clay-soft: #e7c9ba;
+  --color-danger: #e5484d;
 
-  /* Support — muted sage as the complementary cool tone */
-  --color-sage: #6f7c5a;
+  --font-sans: 'Ubuntu', system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  /* Feedback — a deeper red than clay so errors read as errors, not accent */
-  --color-danger: #a8412c;
-  --color-danger-soft: #f0d9d2;
-
-  --color-line: #ddd0b6;
-
-  /* Stage — the dark venue surface behind the /tv display wall. The editor is
-     lit like paper; the wall is lit like a room with a screen in it. */
-  --color-stage: #14100c;
-  --color-stage-soft: #211a13;
-
-  --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
-
-  --shadow-soft: 0 1px 2px rgba(43, 38, 32, 0.06), 0 8px 24px rgba(43, 38, 32, 0.08);
-  --shadow-lift: 0 2px 4px rgba(43, 38, 32, 0.08), 0 16px 40px rgba(43, 38, 32, 0.14);
+  --shadow-soft: 0 1px 2px rgba(6, 10, 30, 0.25), 0 8px 24px rgba(6, 10, 30, 0.3);
+  --shadow-lift: 0 2px 6px rgba(6, 10, 30, 0.3), 0 24px 60px rgba(6, 10, 30, 0.5);
 }
 
 @layer base {
+  html {
+    background-color: var(--color-navy-deep);
+  }
+
   html,
   body,
   #root {
-    height: 100%;
+    min-height: 100%;
   }
 
   body {
     margin: 0;
-    background-color: var(--color-paper);
-    color: var(--color-ink);
+    color: #fff;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    /* subtle paper grain */
-    background-image: radial-gradient(
-      circle at 1px 1px,
-      rgba(43, 38, 32, 0.035) 1px,
-      transparent 0
-    );
-    background-size: 22px 22px;
+    /* No background-attachment: fixed — iOS Safari ignores it. */
+    background-color: var(--color-navy-deep);
+    background-image:
+      radial-gradient(85% 60% at 100% 0%, rgb(47 134 207 / 0.5), transparent 70%),
+      radial-gradient(70% 45% at 0% 100%, rgb(122 47 99 / 0.35), transparent 70%),
+      linear-gradient(165deg, var(--color-navy-deep) 0%, var(--color-navy) 45%, var(--color-indigo) 100%);
   }
 
   * {
@@ -71,56 +50,7 @@
   }
 }
 
-/* Utility: disable text/scroll gestures while dragging layers */
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: none;
-}
-
-/*
-  TV wall (/tv) — the carousel transition.
-
-  Both halves of a change run at once: the outgoing cover leaves to the left as
-  the incoming one arrives from the right, so the two read as a single slide
-  rather than a swap. Duration is mirrored by TV_TRANSITION_MS in config.js,
-  which is when the outgoing frame gets unmounted.
-*/
-@keyframes tv-slide-in {
-  from {
-    opacity: 0;
-    transform: translate3d(58%, 0, 0) scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes tv-slide-out {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translate3d(-58%, 0, 0) scale(0.94);
-  }
-}
-
-.tv-slide-in {
-  animation: tv-slide-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.tv-slide-out {
-  animation: tv-slide-out 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/* Ambient wash — the current cover, blurred, lighting the wall behind itself. */
-/* Matches the slide duration so the wash reaches full strength exactly as the
-   outgoing cover's wash unmounts — otherwise the wall dips mid-change. */
-/* Time remaining on the current cover. */
-@keyframes tv-fade-in {
+@keyframes fade-in {
   from {
     opacity: 0;
   }
@@ -129,14 +59,6 @@
   }
 }
 
-/*
-  Result page (/result) — the reveal.
-
-  The finished cover is the payoff, so it is staged rather than dumped on
-  screen: the heading settles first, the cover lifts in under it, and the
-  controls fade up last. The delays are what make it read as one motion
-  instead of three things appearing at once.
-*/
 @keyframes reveal-rise {
   from {
     opacity: 0;
@@ -148,7 +70,6 @@
   }
 }
 
-/* The cover gets a touch of scale the others don't — it is the hero. */
 @keyframes reveal-lift {
   from {
     opacity: 0;
@@ -160,8 +81,6 @@
   }
 }
 
-/* A confirmation tick that lands rather than fades — used on the success
-   badge and again inside the download button once the file is saved. */
 @keyframes reveal-pop {
   0% {
     opacity: 0;
@@ -174,6 +93,16 @@
   100% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* The processing sweep over the guest's photo while the server works. */
+@keyframes scan {
+  from {
+    transform: translate3d(0, -100%, 0);
+  }
+  to {
+    transform: translate3d(0, 100%, 0);
   }
 }
 
@@ -193,36 +122,23 @@
   animation: reveal-pop 450ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/*
-  Camera shutter — a webcam makes no sound, so the capture needs a visual
-  "click". A quick white wash that clears itself is enough to tell the guest the
-  photo was taken.
-*/
-@keyframes camera-flash {
-  from {
-    opacity: 0.85;
-  }
-  to {
-    opacity: 0;
-  }
+.fade-in {
+  animation: fade-in 900ms ease both;
 }
 
-.camera-flash {
-  animation: camera-flash 320ms ease-out both;
-  pointer-events: none;
+.scan {
+  animation: scan 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tv-slide-in,
-  .tv-slide-out,
   .reveal-head,
   .reveal-cover,
   .reveal-actions,
   .reveal-tick {
-    animation: tv-fade-in 300ms ease both;
+    animation: fade-in 300ms ease both;
   }
 
-  .camera-flash {
-    animation: camera-flash 200ms linear both;
+  .scan {
+    animation: none;
   }
 }

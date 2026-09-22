@@ -15,53 +15,66 @@ There is no test runner configured. Tablet is `/#/`, TV is `/#/tv`.
 
 ## What this is
 
-A **two-device AI photo kiosk**. A guest fills in their details on a tablet,
-picks a template, and takes a photo. That goes to a server which generates the
-final image; a portrait TV listens on SSE and shows the result, then a QR code
-to download it.
+A **two-device AI photo kiosk** for an event in the USA. A guest fills in their
+details on a tablet, picks a template, and takes a photo. The server turns the
+photo into an AI cutout with the background removed. The guest positions it over
+the template, and the tablet flattens the result into one PNG and submits it. A
+portrait TV listens on SSE and shows the result, then a QR code to download it.
 
 ```
-TABLET                              SERVER                 TV (portrait)
+TABLET                                   SERVER              TV (portrait)
  1. Form: name, email, company
- 2. Pick template (3–4 presets)
- 3. Camera → photo
- 4. Submit ──────────────────────►  generate
-                                       │
-                                    SSE │
-                                       └──────────────────► 5. Show result
-                                                            6. Hold N seconds
-                                                            7. QR to download
-                                                            8. Back to idle
+ 2. Pick template (id 1 / 2 / 3)
+ 3. Native camera → raw photo
+ 4. Process ────────────────────────►  AI gen + bg removal
+    ◄──────────────────── cutout at template ratio
+ 5. Editor: template bg + cutout,
+    drag / pinch-zoom / reset
+ 6. Flatten to one PNG (canvas)
+ 7. Final submit (data + PNG) ──────►  store
+                                          │ SSE (heartbeat)
+                                          └────────────────► idle image
+                                                             → result + QR
+                                                             → hold, back to idle
 ```
 
-Everything before submit is held in **localStorage**, so a tablet reload mid-flow
-does not lose the guest's work.
+Everything before the final submit is held in **localStorage**, including the
+editor placement (x/y/scale). A tablet reload mid-flow does not lose the guest's
+work.
+
+The composite is flattened **on the tablet** so the guest's preview and the
+delivered image match exactly. There is one tablet, so the TV needs no queue: a
+newest result replaces the current one. Consent is handled by the client outside
+the app.
 
 **Derived from** `magazine-kiosk-template` (remote `template`). Generic fixes
 should be ported back there; event-specific work stays here.
 
 Stack: React 19 · Vite 8 · Tailwind v4 · react-router-dom v7 (`createHashRouter`).
-Plain JSX, no TypeScript. axios, react-hot-toast, react-icons.
+Plain JSX, no TypeScript. axios, react-hot-toast, react-icons (Feather `Fi*` set),
+qrcode.react, @fontsource/ubuntu (self-hosted: the venue may have no internet,
+and a Google Fonts `<link>` blocks first render until it answers).
 
-## Status — early scaffold
+## Status
 
-Cleaned down to reusable parts. The page components are **placeholders**; the
-flow has not been built yet.
+The whole flow is built and runs end to end against the mock server. The event
+is Capgemini at ACAMS 2026, Las Vegas. Source art (the `.ai` files, full-size
+frames) is in `raw-docs/`. The app uses optimised copies in `src/assets/`.
 
-**Open questions blocking real work** (confirm with the backend owner):
+**Open questions** (confirm with the backend owner). The guessed field names
+live only in `services/api.js` and `services/stream.js`:
 
-1. `POST` submit — exact URL, field names, and what comes back. Is there a job
-   id returned immediately?
-2. SSE frame shape. **Critically: does a result frame carry back an identifier
-   tying it to the submission that caused it?** Without one, two overlapping
-   guests will see each other's photos.
-3. How long generation takes — decides whether the TV needs a progress state.
+1. Process API — URL, fields, and how long it takes. Is the cutout returned as
+   a URL or base64? Is the template id sent?
+2. Final submit API — URL, field names, response.
+3. SSE frame shape and its id field (for de-duping keep-alives).
 4. The download URL behind the QR code — server-provided, or constructed?
-5. What the TV shows when idle, and on failure/timeout.
-6. Template presets — artwork and how the server identifies them.
+5. Is the heartbeat a named event or an SSE `:` comment? See `SSE_STALE_MS`.
+6. CORS: the editor draws the server's cutout onto a canvas, so the cutout URL
+   must send `Access-Control-Allow-Origin`, or the canvas is tainted and export fails.
 
-`USE_MOCK_SERVER` in `config.js` exists so the whole flow can be built and
-demoed before any of this is settled.
+`USE_MOCK_SERVER` returns the raw photo as the "cutout", and delivers the final
+image to a `/#/tv` tab **in the same browser** over BroadcastChannel.
 
 ## Code style
 
@@ -83,44 +96,60 @@ would otherwise break silently. Do not add explanatory prose — architectural
 
 ```
 src/
-  config.js                 server URLs, mock switch, camera, TV timings, branding
+  config.js                 server URLs, mock switch, TEMPLATES, camera, editor, TV timings
   routes/index.jsx          tablet routes under AppLayout; /tv standalone
-  index.css                 @theme tokens + keyframes
+  index.css                 @theme tokens (palette sampled from tv-idle.jpg) + keyframes
+  assets/                   logo.svg · tv-idle.jpg · templates/frame_{1,2,3}.webp
   pages/
-    FormPage                name / email / company          ← placeholder
-    TemplatePage            preset picker                    ← placeholder
-    CapturePage             camera                           ← placeholder
-    SentPage                tablet confirmation              ← placeholder
-    TvPage                  SSE display                      ← placeholder
+    FormPage                name / email / company; Clear drops the whole session
+    TemplatePage            frame picker
+    CapturePage             native camera → review → process (API #1)
+    EditorPage              drag / pinch the cutout, flatten, submit (API #2)
+    SentPage                confirmation, auto-reset after SENT_RESET_MS
+    TvPage                  idle art ↔ result + QR, from the stream
   components/
-    CameraCapture           live camera view, countdown, shutter
-    ui/                     Button · Card · Spinner
-    layout/AppLayout        tablet shell (Toaster, centred main)
-  hooks/useCamera           getUserMedia lifecycle — owns and always releases
-  services/apiOrigin        rewrites server-internal URLs to a reachable origin
+    ui/                     Button · Heading · Spinner
+    layout/AppLayout        tablet shell: home link, logo, step indicator, Toaster, --chrome
+  services/
+    api                     processPhoto · submitFinal (mock or real)
+    stream                  subscribeResults — SSE + watchdog, or mock channel
+    apiOrigin               rewrites server-internal URLs to a reachable origin
   utils/
-    constants               ROUTES, STORAGE_KEY
-    download · image        shared helpers
+    constants               ROUTES, STORAGE_KEY, MOCK_CHANNEL
+    session                 localStorage session (quota errors swallowed)
+    image                   load, shrink the photo, compose the final JPEG
+    download                shared helpers
 ```
 
 ## Traps
 
-**The camera must be released, not hidden.** `useCamera` owns the `MediaStream`;
-every exit path goes through `stop()`. A live stream holds the camera LED on and
-locks the device. Any new exit path must *unmount* `CameraCapture`.
+**The camera is the device's own camera app, not the browser.** CapturePage uses
+`<input type="file" accept="image/*" capture>`. That opens the native camera on
+iPad and iPhone; on desktop it falls back to a file picker. There is no
+`getUserMedia`, so no https requirement and no stream to release. The photo
+comes back at full sensor size and is not cropped. `shrinkPhoto` scales it to
+`PHOTO_MAX_EDGE` as a JPEG, because a raw 12MP data URL overflows localStorage.
+The server makes the template's ratio; the editor covers the window with
+whatever comes back. The input's value is cleared after each pick, or
+re-choosing the same shot fires no change.
 
-**`getUserMedia` needs a secure context.** `localhost` or https only. Over
-`http://192.168.x.x` it does not prompt — it does not exist. This matters here:
-the tablet talks to a LAN server, so plan for https or a localhost tunnel.
-Permission is remembered per origin; a denied camera stays denied until cleared
-in site settings.
+**Placement is in template pixels.** `placement {x, y, w}` is in the frame's
+native pixel space. The editor renders it as percentages, and `composeFinal`
+draws it 1:1, clipped to `template.window`. That shared space is why the preview
+and the delivered image match. If a frame's artwork changes, re-measure its
+`window` in `config.js`.
 
-**The capture is cropped to what the preview showed.** The camera gives a
-landscape frame; the preview is a box at `CAPTURE_RATIO`. `capture()` applies the
-same centred crop, or the guest frames one shot and receives another.
+**Tablet pictures are sized from `--chrome`.** `AppLayout`'s `<main>` sets
+`--chrome`: the height taken by everything except the page's main picture (logo,
+steps, heading, buttons). It is smaller on phones and larger from `sm:`. Frames,
+the camera slot, the review photo and the editor stage are all sized as
+`(100dvh - var(--chrome))`, so they fit one screen on an iPad and on a phone. If
+you add chrome to a page, raise `--chrome` rather than hard-coding a `dvh` value.
+Button rows go full-width with `flex-1` on phones; secondary labels hide below `sm:`.
 
-**The capture is never mirrored.** Flipping the saved image reverses text in the
-scene. `CAMERA_MIRROR_PREVIEW` defaults false so preview and photo agree.
+**Keep the session small.** Everything lives in one localStorage key, rewritten
+on each save. Photos are JPEG data URLs for that reason. Placement is saved on
+gesture end, never per pointermove.
 
 **SSE is a state feed, not an event log** (true of the previous server; confirm
 for this one). The same frame may be re-sent as a keep-alive, so consumers must
@@ -136,8 +165,8 @@ dropped on a static host with no rewrite rules. Don't switch to
 
 ## Devices
 
-**Tablet** — the guest-facing flow, portrait, touch. Native camera via
-`getUserMedia`.
+**Tablet** — the guest-facing flow on an iPad or iPhone, portrait, touch. It uses
+the device's own camera app.
 
 **TV** — 1080 × 1920 portrait, unattended. No tablet chrome; it sits outside
 `AppLayout` for that reason. Size in `vmin`/`clamp()` so it reads from across a

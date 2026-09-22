@@ -1,36 +1,57 @@
+import frame1 from "./assets/templates/frame_1.webp";
+import frame2 from "./assets/templates/frame_2.webp";
+import frame3 from "./assets/templates/frame_3.webp";
+
 // ─── Server ──────────────────────────────────────────────────────────────────
 export const BASE_URL = "http://192.168.1.3";
 
 // TODO: confirm exact paths and payloads with the backend.
+export const PROCESS_URL = `${BASE_URL}/api/process`;
 export const SUBMIT_URL = `${BASE_URL}/api/submit`;
 export const SSE_URL = `${BASE_URL}/api/stream`;
-export const SUBMIT_TIMEOUT_MS = 120000;
+export const PROCESS_TIMEOUT_MS = 120000;
+export const SUBMIT_TIMEOUT_MS = 60000;
 
 // ─── Mode ────────────────────────────────────────────────────────────────────
-// While true no server is called: submissions resolve locally and the TV is fed
-// by a fake stream, so the whole flow can be built and demoed before the backend
-// exists. Turn off once the real endpoints are live.
+// While true no server is called: processing returns the raw photo, and the
+// final submit reaches a /tv tab in the same browser over BroadcastChannel.
 export const USE_MOCK_SERVER = true;
+export const MOCK_PROCESS_DELAY_MS = 2500;
+export const MOCK_DOWNLOAD_URL = "https://www.capgemini.com";
 
-// ─── Camera (tablet) ─────────────────────────────────────────────────────────
-export const CAMERA_WIDTH = 1920;
-export const CAMERA_HEIGHT = 1080;
-// Front camera — the guest is photographing themselves.
+// ─── Templates ───────────────────────────────────────────────────────────────
+// `window` is the photo slot, in the frame's own pixels. The cutout is clipped
+// to it.
+export const TEMPLATES = [
+  { id: 1, name: "Vegas Nights", src: frame1, width: 1200, height: 1920, window: { x: 257, y: 316, w: 686, h: 1041 } },
+  { id: 2, name: "The Strip", src: frame2, width: 1200, height: 1920, window: { x: 260, y: 321, w: 680, h: 1031 } },
+  { id: 3, name: "Skyline Group", src: frame3, width: 1920, height: 1200, window: { x: 345, y: 240, w: 1231, h: 603 } },
+];
+
+// ─── Photo (tablet) ──────────────────────────────────────────────────────────
+// Which lens the native camera opens on: "user" (front) or "environment".
 export const CAMERA_FACING = "user";
-export const CAMERA_COUNTDOWN_S = 3;
-// Mirroring the preview makes it disagree with the saved photo. Leave false.
-export const CAMERA_MIRROR_PREVIEW = false;
-// Capture frame shape. TODO: match to whatever the templates expect.
-export const CAPTURE_RATIO = 3 / 4;
+// Native-camera photos are 12MP+; they are shrunk to this long edge before
+// upload and before being held in localStorage.
+export const PHOTO_MAX_EDGE = 2048;
+export const PHOTO_JPEG_QUALITY = 0.9;
+
+// ─── Editor ──────────────────────────────────────────────────────────────────
+// Cutout width limits, as a multiple of the photo window's width.
+export const EDITOR_MIN_SCALE = 0.3;
+export const EDITOR_MAX_SCALE = 3;
+export const FINAL_JPEG_QUALITY = 0.92;
+
+// ─── Tablet ──────────────────────────────────────────────────────────────────
+// The thank-you screen returns to the form on its own after this long.
+export const SENT_RESET_MS = 12000;
 
 // ─── TV display ──────────────────────────────────────────────────────────────
 // How long a finished result holds the screen before the TV returns to idle.
-export const RESULT_HOLD_MS = 20000;
-// Longest the TV waits for a result before showing a timeout state.
-export const GENERATION_TIMEOUT_MS = 90000;
-export const TV_TRANSITION_MS = 900;
+export const RESULT_HOLD_MS = 30000;
+// No frame (not even a heartbeat) for this long → the stream is treated as dead
+// and reopened.
+export const SSE_STALE_MS = 30000;
 
 // ─── Branding ────────────────────────────────────────────────────────────────
-export const BRAND_TITLE = "Photo Kiosk";
-export const BRAND_SUBTITLE = "AI Portrait Studio";
-export const FOOTER_TEXT = "";
+export const BRAND_TITLE = "AI Moments";
