@@ -37,7 +37,9 @@ export async function submitFinal({ form, templateId, image }) {
   if (USE_MOCK_SERVER) {
     const channel = new BroadcastChannel(MOCK_CHANNEL)
     channel.postMessage({
-      id: crypto.randomUUID(),
+      // Not crypto.randomUUID(): it only exists on https, and the tablet runs
+      // over plain LAN http.
+      id: String(Date.now()),
       image_url: await blobToDataURL(image),
       download_url: MOCK_DOWNLOAD_URL,
     })
