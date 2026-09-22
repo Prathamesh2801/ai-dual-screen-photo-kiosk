@@ -6,7 +6,7 @@ import Button from '../components/ui/Button'
 import Heading from '../components/ui/Heading'
 import Spinner from '../components/ui/Spinner'
 import { EDITOR_MAX_SCALE, EDITOR_MIN_SCALE, FINAL_JPEG_QUALITY } from '../config'
-import { submitFinal } from '../services/api'
+import { submitFinal } from '../services/submitApi'
 import { ROUTES } from '../utils/constants'
 import { composeFinal, coverPlacement, loadImage } from '../utils/image'
 import { loadSession, saveSession, templateById } from '../utils/session'
@@ -118,7 +118,7 @@ export default function EditorPage() {
     setSending(true)
     try {
       const image = await composeFinal(template, session.cutout, placement, FINAL_JPEG_QUALITY)
-      await submitFinal({ form: session.form, templateId: template.id, image })
+      await submitFinal({ form: session.form, templateId: template.id, processId: session.processId, image })
       navigate(ROUTES.sent)
     } catch (err) {
       setSending(false)

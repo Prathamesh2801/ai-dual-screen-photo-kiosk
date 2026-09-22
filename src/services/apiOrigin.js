@@ -1,8 +1,8 @@
-import { SSE_URL } from "../config";
+import { BASE_URL } from "../config";
 
 
 
-export const API_ORIGIN = new URL(SSE_URL).origin;
+export const API_ORIGIN = new URL(BASE_URL).origin;
 
 
 export function toReachableUrl(raw) {

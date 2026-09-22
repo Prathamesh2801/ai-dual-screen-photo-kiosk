@@ -1,4 +1,4 @@
-import { SSE_STALE_MS, SSE_URL, USE_MOCK_SERVER } from '../config'
+import { MOCK, SSE_STALE_MS, SSE_URL } from '../config'
 import { MOCK_CHANNEL } from '../utils/constants'
 import { toReachableUrl } from './apiOrigin'
 
@@ -21,7 +21,7 @@ function parse(raw) {
 }
 
 export function subscribeResults(onResult, onStatus) {
-  if (USE_MOCK_SERVER) {
+  if (MOCK.stream) {
     const channel = new BroadcastChannel(MOCK_CHANNEL)
     channel.onmessage = (e) => {
       const result = toResult(e.data)

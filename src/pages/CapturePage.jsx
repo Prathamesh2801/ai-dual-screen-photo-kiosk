@@ -1,12 +1,14 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { FiArrowLeft, FiCamera, FiRotateCcw, FiZap } from 'react-icons/fi'
+import { FiArrowLeft, FiCamera, FiRotateCcw, FiX, FiZap } from 'react-icons/fi'
 import Button from '../components/ui/Button'
+import ProcessingError from '../components/ProcessingError'
+import ProcessingStatus from '../components/ProcessingStatus'
 import Heading from '../components/ui/Heading'
 import Spinner from '../components/ui/Spinner'
-import { CAMERA_FACING, PHOTO_JPEG_QUALITY, PHOTO_MAX_EDGE } from '../config'
-import { processPhoto } from '../services/api'
+import { CAMERA_FACING, PHOTO_JPEG_QUALITY, PHOTO_MAX_EDGE, PROCESS_TYPICAL_S } from '../config'
+import { processPhoto } from '../services/processApi'
 import { ROUTES } from '../utils/constants'
 import { shrinkPhoto } from '../utils/image'
 import { loadSession, saveSession, templateById } from '../utils/session'
@@ -17,12 +19,20 @@ export default function CapturePage() {
   const [photo, setPhoto] = useState(session.photo ?? null)
   const [reading, setReading] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState(null)
   const inputRef = useRef(null)
+  const requestRef = useRef(null)
   const template = templateById(session.templateId)
+
+  // Leaving mid-generation (Home, back) must not navigate the next guest.
+  useEffect(() => () => requestRef.current?.abort(), [])
 
   if (!template) return <Navigate to={ROUTES.template} replace />
 
-  const openCamera = () => inputRef.current?.click()
+  const openCamera = () => {
+    setError(null)
+    inputRef.current?.click()
+  }
 
   const onFile = async (e) => {
     const file = e.target.files?.[0]
@@ -42,15 +52,25 @@ export default function CapturePage() {
   }
 
   const onUse = async () => {
+    const request = new AbortController()
+    requestRef.current = request
+    setError(null)
     setProcessing(true)
     try {
-      const cutout = await processPhoto({ photo, templateId: template.id })
-      saveSession({ cutout, placement: null })
+      const { id, cutout } = await processPhoto({ photo, signal: request.signal })
+      if (request.signal.aborted) return
+      saveSession({ cutout, processId: id, placement: null })
       navigate(ROUTES.editor)
     } catch (err) {
+      if (request.signal.aborted || err.kind === 'canceled') return
       setProcessing(false)
-      toast.error(err?.message || 'Could not create your portrait. Please try again.')
+      setError(err)
     }
+  }
+
+  const cancel = () => {
+    requestRef.current?.abort()
+    setProcessing(false)
   }
 
   const ratio = template.width / template.height
@@ -67,12 +87,16 @@ export default function CapturePage() {
         className="hidden"
       />
 
-      <Heading title={processing ? 'Creating your portrait' : photo ? 'Looking good?' : 'Strike a pose'}>
+      <Heading
+        title={processing ? 'Creating your portrait' : error ? 'Let’s try that again' : photo ? 'Looking good?' : 'Strike a pose'}
+      >
         {processing
-          ? 'Our AI is working its magic — this takes a few moments.'
-          : photo
-            ? 'Use this photo, or take another.'
-            : 'Tap below to open the camera and take your photo.'}
+          ? `This usually takes ${PROCESS_TYPICAL_S[0]}–${PROCESS_TYPICAL_S[1]} seconds.`
+          : error
+            ? 'Your photo is safe — nothing was lost.'
+            : photo
+              ? 'Use this photo, or take another.'
+              : 'Tap below to open the camera and take your photo.'}
       </Heading>
 
       {photo ? (
@@ -87,9 +111,14 @@ export default function CapturePage() {
           </div>
 
           {processing ? (
-            <p className="reveal-actions flex items-center gap-3 text-white/80">
-              <Spinner size={20} /> Please wait…
-            </p>
+            <div className="reveal-actions flex w-full flex-col items-center gap-5">
+              <ProcessingStatus expectedMs={PROCESS_TYPICAL_S[1] * 1000} />
+              <Button variant="ghost" onClick={cancel}>
+                <FiX /> Cancel
+              </Button>
+            </div>
+          ) : error ? (
+            <ProcessingError error={error} onRetry={onUse} onRetake={openCamera} />
           ) : (
             <div className="reveal-actions flex w-full justify-center gap-3 sm:w-auto sm:gap-4">
               <Button variant="ghost" size="xl" className="flex-1 sm:flex-none" onClick={openCamera} disabled={reading}>

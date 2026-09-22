@@ -3,19 +3,29 @@ import frame2 from "./assets/templates/frame_2.webp";
 import frame3 from "./assets/templates/frame_3.webp";
 
 // ─── Server ──────────────────────────────────────────────────────────────────
-export const BASE_URL = "http://192.168.1.3";
+export const BASE_URL = "http://192.168.1.88/ministack/Capgemini_USA_Photobooth";
 
-// TODO: confirm exact paths and payloads with the backend.
-export const PROCESS_URL = `${BASE_URL}/api/process`;
+export const PROCESS_URL = `${BASE_URL}/gpt.php`;
+// TODO: confirm paths and payloads with the backend.
 export const SUBMIT_URL = `${BASE_URL}/api/submit`;
 export const SSE_URL = `${BASE_URL}/api/stream`;
-export const PROCESS_TIMEOUT_MS = 120000;
+
+// Typical generation time, in seconds. Shown to the guest as the estimate and
+// used to pace the progress bar. TIMEOUT is when the tablet gives up and offers
+// a retry; keep it well past the upper end.
+export const PROCESS_TYPICAL_S = [15, 25];
+export const PROCESS_TIMEOUT_MS = 90000;
 export const SUBMIT_TIMEOUT_MS = 60000;
 
-// ─── Mode ────────────────────────────────────────────────────────────────────
-// While true no server is called: processing returns the raw photo, and the
-// final submit reaches a /tv tab in the same browser over BroadcastChannel.
-export const USE_MOCK_SERVER = true;
+// ─── Mock ────────────────────────────────────────────────────────────────────
+// Per feature, so each goes live as its endpoint does. `submit` and `stream`
+// must match: the mock submit reaches a /tv tab in the same browser over
+// BroadcastChannel, and only the mock stream listens there.
+export const MOCK = {
+  process: false,
+  submit: true,
+  stream: true,
+};
 export const MOCK_PROCESS_DELAY_MS = 2500;
 export const MOCK_DOWNLOAD_URL = "https://www.capgemini.com";
 

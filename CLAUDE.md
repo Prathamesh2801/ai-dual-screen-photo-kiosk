@@ -61,20 +61,34 @@ The whole flow is built and runs end to end against the mock server. The event
 is Capgemini at ACAMS 2026, Las Vegas. Source art (the `.ai` files, full-size
 frames) is in `raw-docs/`. The app uses optimised copies in `src/assets/`.
 
+**Process API — live and confirmed.** `POST {BASE_URL}/gpt.php`, multipart with
+one file field, `source`, and no template id. It takes 15–25 s (`PROCESS_TYPICAL_S`) and returns
+`{ success, id, generated_image_url, final_image_url, error? }`. The app uses
+`final_image_url`, the RGBA cutout with its background removed.
+`generated_image_url` still has its background and is unused. `id` is kept as
+`session.processId` and passed to the final submit. The backend sends
+`Access-Control-Allow-Origin: *` on `gpt.php` and on `Final/`; `Generated/` has
+no CORS header.
+
 **Open questions** (confirm with the backend owner). The guessed field names
-live only in `services/api.js` and `services/stream.js`:
+live only in `services/submitApi.js` and `services/stream.js`:
 
-1. Process API — URL, fields, and how long it takes. Is the cutout returned as
-   a URL or base64? Is the template id sent?
-2. Final submit API — URL, field names, response.
-3. SSE frame shape and its id field (for de-duping keep-alives).
-4. The download URL behind the QR code — server-provided, or constructed?
-5. Is the heartbeat a named event or an SSE `:` comment? See `SSE_STALE_MS`.
-6. CORS: the editor draws the server's cutout onto a canvas, so the cutout URL
-   must send `Access-Control-Allow-Origin`, or the canvas is tainted and export fails.
+1. Final submit API — URL, field names, response.
+2. SSE frame shape and its id field (for de-duping keep-alives).
+3. The download URL behind the QR code — server-provided, or constructed?
+4. Is the heartbeat a named event or an SSE `:` comment? See `SSE_STALE_MS`.
 
-`USE_MOCK_SERVER` returns the raw photo as the "cutout", and delivers the final
-image to a `/#/tv` tab **in the same browser** over BroadcastChannel.
+**Mocks are per feature** (`MOCK` in `config.js`). `process` is off: the live API
+is used. `submit` and `stream` are on and must be switched together. The mock
+submit delivers the final image to a `/#/tv` tab **in the same browser** over
+BroadcastChannel, so with the tablet and TV on separate devices, the TV stays
+idle until both are live.
+
+**Any image drawn on the editor canvas needs CORS.** Without
+`Access-Control-Allow-Origin` the image either fails to load (`crossOrigin` is
+set) or taints the canvas, and Submit fails. `processPhoto` preloads the cutout
+before opening the editor, so this shows up as a retryable toast on the capture
+page rather than a blank editor.
 
 ## Code style
 
@@ -87,7 +101,13 @@ would otherwise break silently. Do not add explanatory prose — architectural
 - **Tailwind utilities only.** The only hand-written CSS is `@theme` tokens and
   keyframes in `index.css`.
 - **Pointer Events**, not mouse/touch — touch devices throughout.
-- **`react-hot-toast` is the only feedback channel.** Never `alert()`.
+- **`react-hot-toast` is the feedback channel.** Never `alert()`. One exception:
+  a failed generation replaces the 15–25 s wait with an inline `ProcessingError`
+  panel (Retake / Try again), because the guest's next step lives there.
+- **Request failures carry a `kind`.** `services/http.js` throws `RequestError`
+  with `network` · `timeout` · `server` · `image` · `canceled`. UI chooses copy by
+  kind and shows `message` as-is. Never retry generation automatically: the
+  server may have finished and spent AI credits.
 - **Failures are non-fatal.** When adding a network call, decide what still
   works when it fails.
 - Some files use semicolons, some don't. Follow the file you're editing.
@@ -103,15 +123,19 @@ src/
   pages/
     FormPage                name / email / company; Clear drops the whole session
     TemplatePage            frame picker
-    CapturePage             native camera → review → process (API #1)
+    CapturePage             native camera → review → process (API #1), cancellable
     EditorPage              drag / pinch the cutout, flatten, submit (API #2)
     SentPage                confirmation, auto-reset after SENT_RESET_MS
     TvPage                  idle art ↔ result + QR, from the stream
   components/
+    ProcessingStatus        paced progress bar + stage messages for the 15–25 s wait
+    ProcessingError         inline failure panel per error kind: Retake / Try again
     ui/                     Button · Heading · Spinner
     layout/AppLayout        tablet shell: home link, logo, step indicator, Toaster, --chrome
   services/
-    api                     processPhoto · submitFinal (mock or real)
+    http                    postForm — axios + one friendly error per failure
+    processApi              processPhoto → { id, cutout }, abortable, preloads cutout
+    submitApi               submitFinal (mock or real)
     stream                  subscribeResults — SSE + watchdog, or mock channel
     apiOrigin               rewrites server-internal URLs to a reachable origin
   utils/
