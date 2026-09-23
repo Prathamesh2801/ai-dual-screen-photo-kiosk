@@ -70,19 +70,22 @@ one file field, `source`, plus `size` from the template (2:3 portrait for frames
 `Access-Control-Allow-Origin: *` on `gpt.php` and on `Final/`; `Generated/` has
 no CORS header.
 
-**Open questions** (confirm with the backend owner). The guessed field names
-live only in `services/submitApi.js` and `services/stream.js`:
+**Submit + stream API — live and confirmed.** One endpoint, `{BASE_URL}/api.php`.
+`POST` multipart: `image` (the flattened JPEG) and `data` (a JSON string with the
+form, `template_id` and `process_id`). It returns `{ success, record }`, where
+`record` is `{ event, id, image, image_url, view_url, data, uploaded_at }`. `GET`
+is the TV's SSE stream: `event: upload` frames carry the same `record`;
+`event: downloaded` frames carry `{ id, file, view_url, downloaded_at }` once a
+guest downloads from `view.php` → `download.php`. `: ping` comments keep it alive.
+The QR code points at `view_url`. The TV leaves a result on the first of: the
+`RESULT_HOLD_MS` countdown ends, a newer upload arrives, or a `downloaded`
+frame with the same `id`. `api.php` sends `Access-Control-Allow-Origin: *`.
 
-1. Final submit API — URL, field names, response.
-2. SSE frame shape and its id field (for de-duping keep-alives).
-3. The download URL behind the QR code — server-provided, or constructed?
-4. Is the heartbeat a named event or an SSE `:` comment? See `SSE_STALE_MS`.
-
-**Mocks are per feature** (`MOCK` in `config.js`). `process` is off: the live API
-is used. `submit` and `stream` are on and must be switched together. The mock
-submit delivers the final image to a `/#/tv` tab **in the same browser** over
-BroadcastChannel, so with the tablet and TV on separate devices, the TV stays
-idle until both are live.
+**Mocks are per feature** (`MOCK` in `config.js`). The API mocks are off. `form`
+prefills a unique fake guest on each mount, on the dev server only
+(`import.meta.env.DEV`), so it never reaches a build. `submit` and
+`stream` must be switched together: the mock submit delivers to a `/#/tv` tab **in
+the same browser** over BroadcastChannel.
 
 **Any image drawn on the editor canvas needs CORS.** Without
 `Access-Control-Allow-Origin` the image either fails to load (`crossOrigin` is
@@ -175,9 +178,11 @@ Button rows go full-width with `flex-1` on phones; secondary labels hide below `
 on each save. Photos are JPEG data URLs for that reason. Placement is saved on
 gesture end, never per pointermove.
 
-**SSE is a state feed, not an event log** (true of the previous server; confirm
-for this one). The same frame may be re-sent as a keep-alive, so consumers must
-de-dupe on an id rather than treating every frame as news.
+**SSE is a state feed, not an event log.** Every connect replays the latest
+upload, however old. The TV drops frames older than `SSE_FRESH_MS` (by
+`uploaded_at`, so the TV and server clocks must roughly agree) and de-dupes on
+`id`. The `: ping` keep-alives never reach JS, so the TV's status dot (green =
+live, red = reconnecting) comes from EventSource open/error only.
 
 **Server URLs may echo an internal host.** `toReachableUrl()` in
 `services/apiOrigin.js` re-points them at the origin actually reached. Every URL

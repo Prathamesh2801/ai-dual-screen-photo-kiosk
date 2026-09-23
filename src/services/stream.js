@@ -1,26 +1,32 @@
-import { MOCK, SSE_STALE_MS, SSE_URL } from '../config'
+import { MOCK, SSE_FRESH_MS, SSE_RETRY_MS, SSE_URL } from '../config'
 import { MOCK_CHANNEL } from '../utils/constants'
 import { toReachableUrl } from './apiOrigin'
 
-// Frame shape is unconfirmed — see "Open questions" in CLAUDE.md.
 function toResult(frame) {
   if (!frame?.image_url) return null
   return {
     id: String(frame.id ?? frame.image_url),
     imageUrl: toReachableUrl(frame.image_url),
-    downloadUrl: toReachableUrl(frame.download_url ?? frame.image_url),
+    downloadUrl: toReachableUrl(frame.view_url ?? frame.download_url ?? frame.image_url),
   }
+}
+
+// ponytail: freshness trusts the TV and server clocks to agree within SSE_FRESH_MS.
+function isFresh(frame) {
+  const at = Date.parse(frame.uploaded_at)
+  return Number.isNaN(at) || Date.now() - at < SSE_FRESH_MS
 }
 
 function parse(raw) {
   try {
-    return toResult(JSON.parse(raw))
+    const frame = JSON.parse(raw)
+    return isFresh(frame) ? toResult(frame) : null
   } catch {
     return null
   }
 }
 
-export function subscribeResults(onResult, onStatus) {
+export function subscribeResults(onResult, onStatus, onDownloaded) {
   if (MOCK.stream) {
     const channel = new BroadcastChannel(MOCK_CHANNEL)
     channel.onmessage = (e) => {
@@ -32,39 +38,35 @@ export function subscribeResults(onResult, onStatus) {
   }
 
   let source
-  let watchdog
+  let retry
 
-  // Heartbeats sent as SSE ":" comments never reach JS, so this watchdog
-  // would kill a healthy stream. Set SSE_STALE_MS to 0 in that case.
-  const arm = () => {
-    if (!SSE_STALE_MS) return
-    clearTimeout(watchdog)
-    watchdog = setTimeout(() => {
-      source.close()
-      onStatus(false)
-      open()
-    }, SSE_STALE_MS)
-  }
-
+  // The server's ": ping" keep-alives are SSE comments and never reach JS, so
+  // liveness comes from open/error alone.
   const open = () => {
     source = new EventSource(SSE_URL)
-    source.onopen = () => {
-      onStatus(true)
-      arm()
-    }
-    source.onmessage = (e) => {
-      arm()
+    source.onopen = () => onStatus(true)
+    source.addEventListener('upload', (e) => {
       const result = parse(e.data)
       if (result) onResult(result)
+    })
+    // Carries the upload's id once the guest downloads it from view_url.
+    source.addEventListener('downloaded', (e) => {
+      try {
+        onDownloaded(String(JSON.parse(e.data).id))
+      } catch {
+        // Malformed frame: nothing to clear.
+      }
+    })
+    source.onerror = () => {
+      onStatus(false)
+      // EventSource retries on its own unless the response was not a stream.
+      if (source.readyState === EventSource.CLOSED) retry = setTimeout(open, SSE_RETRY_MS)
     }
-    source.addEventListener('heartbeat', arm)
-    source.onerror = () => onStatus(false)
-    arm()
   }
 
   open()
   return () => {
-    clearTimeout(watchdog)
+    clearTimeout(retry)
     source.close()
   }
 }

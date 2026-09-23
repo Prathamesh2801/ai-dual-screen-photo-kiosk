@@ -10,10 +10,22 @@ import {
 } from "react-icons/fi";
 import Button from "../components/ui/Button";
 import Heading from "../components/ui/Heading";
+import { MOCK } from "../config";
 import { ROUTES } from "../utils/constants";
 import { clearSession, loadSession, saveSession } from "../utils/session";
 
 const EMPTY = { name: "", email: "", company: "" };
+
+const MOCK_FORM = import.meta.env.DEV && MOCK.form;
+
+function fakeForm() {
+  const tag = Date.now().toString(36);
+  return {
+    name: `Test Guest ${tag}`,
+    email: `guest.${tag}@example.com`,
+    company: `Test Co ${tag.slice(-3).toUpperCase()}`,
+  };
+}
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function firstError({ name, email, company }) {
@@ -57,7 +69,9 @@ const FIELDS = [
 
 export default function FormPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState(() => ({ ...EMPTY, ...loadSession().form }));
+  const [form, setForm] = useState(() =>
+    MOCK_FORM ? fakeForm() : { ...EMPTY, ...loadSession().form },
+  );
 
   const update = (key, raw) => {
     const next = { ...form, [key]: raw };

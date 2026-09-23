@@ -3,7 +3,6 @@ import { MOCK_CHANNEL } from '../utils/constants'
 import { blobToDataURL } from '../utils/image'
 import { postForm } from './http'
 
-// Field names are unconfirmed — see "Open questions" in CLAUDE.md.
 export async function submitFinal({ form, templateId, processId, image }) {
   if (MOCK.submit) {
     const channel = new BroadcastChannel(MOCK_CHANNEL)
@@ -19,11 +18,7 @@ export async function submitFinal({ form, templateId, processId, image }) {
   }
 
   const body = new FormData()
-  body.append('name', form.name)
-  body.append('email', form.email)
-  body.append('company', form.company)
-  body.append('template_id', String(templateId))
-  if (processId) body.append('id', processId)
   body.append('image', image, 'final.jpg')
+  body.append('data', JSON.stringify({ ...form, template_id: templateId, process_id: processId ?? null }))
   await postForm(SUBMIT_URL, body, { timeout: SUBMIT_TIMEOUT_MS })
 }

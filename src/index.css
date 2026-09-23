@@ -1,14 +1,12 @@
 @import 'tailwindcss';
 
-/* Palette sampled from the TV idle art: deep indigo, Strip blue, a magenta glow. */
+/* Capgemini palette, sampled from raw-docs/ui/tab.jpeg: navy → brand blue → vibrant blue → turquoise. */
 @theme {
-  --color-navy-deep: #0b1130;
-  --color-navy: #151d45;
-  --color-indigo: #26336e;
-  --color-brand: #1d5fae;
-  --color-azure: #2f86cf;
-  --color-aqua: #3fc6e0;
-  --color-glow: #7a2f63;
+  --color-navy-deep: #0d1a3d;
+  --color-navy: #13244f;
+  --color-brand: #0070ad;
+  --color-azure: #12abdb;
+  --color-aqua: #00d5d0;
 
   --color-ink: #0b1530;
   --color-ink-soft: #4a5572;
@@ -23,7 +21,7 @@
 
 @layer base {
   html {
-    background-color: var(--color-navy-deep);
+    background-color: var(--color-brand);
   }
 
   html,
@@ -38,11 +36,16 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     /* No background-attachment: fixed — iOS Safari ignores it. */
-    background-color: var(--color-navy-deep);
+    /* Top to bottom: film grain, two silky wave edges, a diagonal light streak,
+       a deep corner shadow, then the navy → cyan sweep. */
+    background-color: var(--color-brand);
     background-image:
-      radial-gradient(85% 60% at 100% 0%, rgb(47 134 207 / 0.5), transparent 70%),
-      radial-gradient(70% 45% at 0% 100%, rgb(122 47 99 / 0.35), transparent 70%),
-      linear-gradient(165deg, var(--color-navy-deep) 0%, var(--color-navy) 45%, var(--color-indigo) 100%);
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E"),
+      radial-gradient(190% 60% at -5% 100%, transparent 58%, rgb(140 225 255 / 0.13) 63%, rgb(0 180 240 / 0.06) 67%, transparent 74%),
+      radial-gradient(170% 55% at 110% 18%, transparent 58%, rgb(120 215 255 / 0.1) 63%, transparent 71%),
+      linear-gradient(125deg, transparent 30%, rgb(0 190 255 / 0.26) 48%, rgb(80 215 255 / 0.1) 55%, transparent 70%),
+      radial-gradient(55% 40% at 100% 100%, rgb(10 40 130 / 0.4), transparent 70%),
+      linear-gradient(170deg, var(--color-navy-deep) 0%, #06307a 30%, #0063b8 58%, #0096d9 82%, #00c2ec 100%);
   }
 
   * {

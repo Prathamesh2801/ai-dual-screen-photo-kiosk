@@ -43,9 +43,9 @@ export default function TemplatePage() {
               className={`relative overflow-hidden rounded-xl shadow-lift transition duration-200 sm:rounded-2xl
                 ${landscape ? 'col-span-2' : ''}
                 ${active ? 'ring-4 ring-white' : 'opacity-75 ring-1 ring-white/25 active:scale-[0.98]'}`}
-              style={{ aspectRatio: t.width / t.height }}
             >
-              <img src={t.src} alt="" className="h-full w-full object-cover" draggable={false} />
+              {/* Height from the img's own ratio: iPad Safari collapses an aspect-ratio grid item. */}
+              <img src={t.src} width={t.width} height={t.height} alt="" className="block h-auto w-full" draggable={false} />
               {active && (
                 <span className="reveal-tick absolute top-2 left-2 flex h-8 w-8 items-center justify-center rounded-full bg-white text-brand shadow-soft sm:top-3 sm:left-3 sm:h-10 sm:w-10">
                   <FiCheck className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} />
