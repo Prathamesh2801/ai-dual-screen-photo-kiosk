@@ -145,7 +145,6 @@ src/
     constants               ROUTES, STORAGE_KEY, MOCK_CHANNEL
     session                 localStorage session (quota errors swallowed)
     image                   load, shrink the photo, compose the final JPEG
-    download                shared helpers
 ```
 
 ## Traps

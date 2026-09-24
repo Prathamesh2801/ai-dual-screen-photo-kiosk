@@ -93,6 +93,3 @@ export const RESULT_HOLD_MS = 60000;
 export const SSE_FRESH_MS = 60000;
 // A stream the server closed is reopened after this long.
 export const SSE_RETRY_MS = 3000;
-
-// ─── Branding ────────────────────────────────────────────────────────────────
-export const BRAND_TITLE = "AI Moments";
