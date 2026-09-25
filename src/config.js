@@ -3,8 +3,7 @@ import frame2 from "./assets/templates/frame_2.webp";
 import frame3 from "./assets/templates/frame_3.webp";
 
 // ─── Server ──────────────────────────────────────────────────────────────────
-export const BASE_URL =
-  "http://192.168.1.88/ministack/Capgemini_USA_Photobooth";
+export const BASE_URL = "https://usaphotobooth.theeventpics.com/API";
 
 export const PROCESS_URL = `${BASE_URL}/gpt.php`;
 // One endpoint: POST uploads the final image, GET is the TV's SSE stream.
@@ -24,7 +23,7 @@ export const SUBMIT_TIMEOUT_MS = 60000;
 // BroadcastChannel, and only the mock stream listens there.
 export const MOCK = {
   // Prefills the form with a unique fake guest on every mount. Dev server only.
-  form: true,
+  form: false,
   process: false,
   submit: false,
   stream: false,
